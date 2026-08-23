@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>横浜 花火大会 鑑賞スポットガイド</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0d1b;
+            --card-inner-bg: rgba(22, 27, 51, 0.95);
+            --primary-text: #ffffff;
+            --secondary-text: #b0b7d3;
+            --gold-accent: #ffd166;
+            --btn-bg: linear-gradient(135deg, #1d3557 0%, #0077b6 100%);
+            --warning-bg: rgba(255, 193, 7, 0.18);
+            --warning-text: #ffe066;
+            --warning-border: rgba(255, 193, 7, 0.5);
+            --danger-bg: rgba(248, 113, 113, 0.18);
+            --danger-text: #fca5a5;
+            --danger-border: rgba(248, 113, 113, 0.5);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background: #0b0d1b radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b0d1b 70%);
+            color: var(--primary-text);
+            padding: 20px 14px 40px;
+            line-height: 1.5;
+            min-height: 100vh;
+            background-attachment: fixed;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            position: relative;
+        }
+
+        /* アニメーション用のパーティクル用Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ヘッダーエリア */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+        }
+
+        header .main-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #ffd166, #ff758f, #4cc9f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+            line-height: 1.3;
+        }
+
+        header .sub-title {
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+            line-height: 1.4;
+        }
+
+        .container-custom {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 当日の注意事項カード */
+        .info-card {
+            background: rgba(30, 35, 66, 0.95);
+            border: 1px solid rgba(255, 209, 102, 0.4);
+            border-radius: var(--radius);
+            padding: 18px 16px;
+            box-shadow: 0 0 24px rgba(255, 209, 102, 0.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .info-card h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--gold-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+            padding-bottom: 8px;
+        }
+
+        .time-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, #ff4d6d, #7209b7);
+            color: #fff;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 12px rgba(255, 77, 109, 0.3);
+            line-height: 1.4;
+        }
+
+        .map-iframe-wrapper {
+            width: 100%;
+            height: 180px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            margin-bottom: 12px;
+        }
+
+        .map-iframe-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* 注意事項リスト */
+        .notice-list {
+            list-style: none;
+            font-size: 0.875rem;
+            color: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+
+        .notice-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notice-icon {
+            font-size: 1.5rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        /* リスト内の小見出し（本文よりしっかり拡大） */
+        .item-heading {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .notice-sub-list {
+            list-style: none;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-left: 0;
+        }
+
+        .notice-sub-item {
+            background: rgba(0, 0, 0, 0.25);
+            padding: 10px 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-divider {
+            margin: 10px 0 5px 0;
+            border-bottom: 2px dashed rgba(76, 201, 240, 0.25);
+        }
+
+        .section-header {
+            margin-bottom: 6px;
+            padding: 12px 16px;
+            background: linear-gradient(90deg, rgba(76, 201, 240, 0.3) 0%, rgba(114, 9, 183, 0.3) 100%);
+            border-left: 5px solid #4cc9f0;
+            border-radius: 0 12px 12px 0;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-header-title {
+            font-size: 1.1rem;
+            color: #ffffff;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.6);
+        }
+
+        .section-header-sub {
+            display: inline-block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffd166;
+            margin-left: 4px;
+        }
+
+        /* アコーディオンスポットカード */
+        .card-custom {
+            position: relative;
+            background: linear-gradient(90deg, rgba(76, 201, 240, 0.8) 0%, rgba(114, 9, 183, 0.8) 100%);
+            border-radius: var(--radius);
+            padding: 2px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 15px rgba(76, 201, 240, 0.15);
+        }
+
+        .card-inner {
+            background: var(--card-inner-bg);
+            border-radius: calc(var(--radius) - 2px);
+            padding: 14px 16px;
+            backdrop-filter: blur(10px);
+            width: 100%;
+            height: 100%;
+        }
+
+        .card-header-custom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .title-group h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.3;
+            letter-spacing: 0.3px;
+            margin-bottom: 0;
+        }
+
+        rt {
+            font-size: 0.65rem;
+            color: #a5b4fc;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        .toggle-arrow {
+            font-size: 0.85rem;
+            color: #4cc9f0;
+            transition: transform 0.3s ease;
+            margin-left: 6px;
+        }
+
+        .card-custom.active .toggle-arrow {
+            transform: rotate(180deg);
+        }
+
+        .card-content {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), opacity 0.3s ease;
+        }
+
+        .card-custom.active .card-content {
+            max-height: 900px;
+            opacity: 1;
+            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
+            padding-top: 14px;
+        }
+
+        .area-tag {
+            display: inline-block;
+            font-size: 0.725rem;
+            color: #2ec4b6;
+            background: rgba(46, 196, 182, 0.15);
+            border: 1px solid rgba(46, 196, 182, 0.4);
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 2px;
+            margin-left: 4px;
+            font-weight: 700;
+        }
+
+        .status-badge.caution {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+            border: 1px solid var(--warning-border);
+        }
+
+        .status-badge.danger {
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid var(--danger-border);
+        }
+
+        .spot-info-block {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 0.825rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 周辺情報の見出し（アイコン＋テキスト） */
+        .spot-info-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #4cc9f0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+
+        .spot-info-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-left: 0;
+            margin-bottom: 0;
+            color: #d1d5db;
+        }
+
+        .time-dist {
+            display: block;
+            color: #ffd166;
+            font-weight: 600;
+            padding-left: 1.2em;
+            margin-top: 1px;
+        }
+
+        .warning-box {
+            font-size: 0.825rem;
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .warning-box.caution {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+            border: 1px solid var(--warning-border);
+        }
+
+        .warning-box.danger {
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid var(--danger-border);
+        }
+
+        .map-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: var(--btn-bg);
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .ref-footer {
+            margin-top: 35px;
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--secondary-text);
+            opacity: 0.75;
+        }
+
+        .ref-footer a {
+            color: var(--secondary-text);
+            text-decoration: underline;
+        }
+
+        .nobr {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 光の砂エフェクト用キャンバス -->
+    <canvas id="particle-canvas"></canvas>
+
+    <header>
+        <div class="main-title">🎆 横浜 花火鑑賞マップ 🎆</div>
+        <div class="sub-title">
+            横浜グリーンエクスポ応援 みなとみらいフェスティバル<br>
+            スカイシンフォニー in ヨコハマ ガイド
+        </div>
+    </header>
+
+    <div class="container-custom">
+
+        <!-- 当日情報・注意事項カード -->
+        <section class="info-card">
+            <h2><i class="bi bi-clock-history text-warning fs-3"></i> 打上時間・当日案内</h2>
+            
+            <div class="text-center mb-3">
+                <div class="time-badge">
+                    🎆 <span class="nobr">打ち上げ時間（予定）</span><br>
+                    <span class="nobr">19:10 〜 19:55</span>
+                </div>
+            </div>
+
+            <!-- 花火が上がる場所 -->
+            <div class="mb-3">
+                <div class="fw-bold mb-1" style="font-size: 1.0rem; color: #4cc9f0;">
+                    <i class="bi bi-geo-alt-fill text-danger fs-4"></i> 花火が上がる場所（打上台船・臨港パーク沖）
+                </div>
+                <div class="map-iframe-wrapper">
+                    <iframe src="https://maps.google.com/maps?q=臨港パーク&t=k&z=16&ie=UTF8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+
+            <ul class="notice-list">
+                <li class="notice-item">
+                    <i class="bi bi-exclamation-triangle-fill text-warning notice-icon fs-2"></i>
+                    <div>
+                        <span class="item-heading">早めの移動推奨</span>
+                        18時以降はみなとみらい・桜木町・横浜エリア一帯で激しい混雑や交通規制が予想されます。余裕をもって行動しましょう。
+                    </div>
+                </li>
+                <li class="notice-item">
+                    <i class="bi bi-cart-check-fill text-info notice-icon fs-2"></i>
+                    <div>
+                        <span class="item-heading">会場到着前に買い出し完了</span>
+                        観覧スポット（現地）の直前や周辺コンビニは長蛇の列になり売り切れも発生します。食べ物や飲み物は鑑賞スポットに到着する前の道中（駅や離れたコンビニ）であらかじめ買っておくのがベストです！
+                    </div>
+                </li>
+                <li class="notice-item">
+                    <i class="bi bi-phone-vibrate text-primary notice-icon fs-2"></i>
+                    <div class="w-100">
+                        <span class="item-heading">バッテリー＆電波障害に注意</span>
+                        <ul class="notice-sub-list">
+                            <li class="notice-sub-item">
+                                <i class="bi bi-battery-charging text-success fs-3 flex-shrink-0"></i>
+                                <div>
+                                    <span class="item-heading" style="font-size: 0.95rem; color: #6ee7b7;">モバイルバッテリー必須</span>
+                                    写真・動画撮影や連絡で電池消耗が激しくなります。
+                                </div>
+                            </li>
+                            <li class="notice-sub-item">
+                                <i class="bi bi-wifi-off text-danger fs-3 flex-shrink-0"></i>
+                                <div>
+                                    <span class="item-heading" style="font-size: 0.95rem; color: #fca5a5;">電波が繋がりにくくなる</span>
+                                    人混みでキャリア回線が混雑するため、LINE等の送受信が遅れる場合があります。合流場所を事前決定するか、このページをスクショ保存しておくと安心です。
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <!-- 仕切り線 -->
+        <div class="section-divider"></div>
+
+        <!-- 改行を考慮したセクション見出し -->
+        <div class="section-header">
+            <div class="section-header-title">
+                <i class="bi bi-map-fill me-1"></i> 観覧スポット・エリア一覧
+                <span class="section-header-sub">（タップで開閉）</span>
+            </div>
+        </div>
+
+        <!-- 高島水際線公園（ふりがな付き） -->
+        <div class="card-custom">
+            <div class="card-inner">
+                <div class="card-header-custom">
+                    <span class="fs-4">📍</span>
+                    <div class="title-group">
+                        <h3><ruby>高島水際線公園<rt>たかしま すいさいせん こうえん</rt></ruby></h3>
+                        <span class="area-tag">高島</span>
+                    </div>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="map-iframe-wrapper">
+                        <iframe src="https://maps.google.com/maps?q=高島水際線公園&t=k&z=17&ie=UTF8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+
+                    <!-- スポット周辺情報（コンビニ・トイレ） -->
+                    <div class="spot-info-block">
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-shop text-warning fs-4"></i> コンビニ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・セブンイレブン 横浜富士ゼロックスR＆Dスクエア店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩3分</span>
+                                </li>
+                                <li>
+                                    ・ファミリーマート 横浜富士ゼロックス店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩3分</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-person-workspace text-info fs-4"></i> トイレ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・公園内公衆トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩0分（公園内）</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <a href="https://www.google.com/maps/search/?api=1&query=高島水際線公園" target="_blank" rel="noopener noreferrer" class="map-btn">
+                        <i class="bi bi-box-arrow-up-right fs-5"></i> Googleマップで開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 北仲通北第一公園（ふりがな付き） -->
+        <div class="card-custom">
+            <div class="card-inner">
+                <div class="card-header-custom">
+                    <span class="fs-4">📍</span>
+                    <div class="title-group">
+                        <h3><ruby>北仲通北第一公園<rt>きたなかどおり きた だいいち こうえん</rt></ruby></h3>
+                        <span class="area-tag">北仲通</span>
+                    </div>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="map-iframe-wrapper">
+                        <iframe src="https://maps.google.com/maps?q=北仲通北第一公園&t=k&z=17&ie=UTF8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+
+                    <!-- スポット周辺情報（コンビニ・トイレ） -->
+                    <div class="spot-info-block">
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-shop text-warning fs-4"></i> コンビニ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・ローソン 北仲ブリック＆ホワイト店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩2分</span>
+                                </li>
+                                <li>
+                                    ・ファミリーマート 横浜北仲店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩3分</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-person-workspace text-info fs-4"></i> トイレ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・KITANAKA BRICK＆WHITE内トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩2分</span>
+                                </li>
+                                <li>
+                                    ・馬車道駅構内トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩3分</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <a href="https://www.google.com/maps/search/?api=1&query=北仲通北第一公園" target="_blank" rel="noopener noreferrer" class="map-btn">
+                        <i class="bi bi-box-arrow-up-right fs-5"></i> Googleマップで開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 横浜市役所 -->
+        <div class="card-custom">
+            <div class="card-inner">
+                <div class="card-header-custom">
+                    <span class="fs-4">📍</span>
+                    <div class="title-group">
+                        <h3>横浜市役所</h3>
+                        <span class="area-tag">本町</span>
+                    </div>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="map-iframe-wrapper">
+                        <iframe src="https://maps.google.com/maps?q=横浜市役所&t=k&z=17&ie=UTF8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+
+                    <!-- スポット周辺情報（コンビニ・トイレ） -->
+                    <div class="spot-info-block">
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-shop text-warning fs-4"></i> コンビニ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・セブンイレブン 横浜市役所店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩1分（庁舎内）</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-person-workspace text-info fs-4"></i> トイレ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・市役所庁舎内・ラクシスフロントトイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩1分（庁舎内）</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <a href="https://www.google.com/maps/search/?api=1&query=横浜市役所" target="_blank" rel="noopener noreferrer" class="map-btn">
+                        <i class="bi bi-box-arrow-up-right fs-5"></i> Googleマップで開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 象の鼻パーク（混雑注意バッジ付き） -->
+        <div class="card-custom">
+            <div class="card-inner">
+                <div class="card-header-custom">
+                    <span class="fs-4">📍</span>
+                    <div class="title-group">
+                        <h3>象の鼻パーク</h3>
+                        <span class="area-tag">海岸通</span>
+                        <span class="status-badge caution">混雑注意</span>
+                    </div>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="map-iframe-wrapper">
+                        <iframe src="https://maps.google.com/maps?q=象の鼻パーク&t=k&z=17&ie=UTF8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+
+                    <div class="spot-info-block">
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-shop text-warning fs-4"></i> コンビニ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・ローソン 横浜日本大通店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩3分</span>
+                                </li>
+                                <li>
+                                    ・ローソン スリーエフ日本大通駅前店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩4分</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-person-workspace text-info fs-4"></i> トイレ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・公園内公衆トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩0分（公園内）</span>
+                                </li>
+                                <li>
+                                    ・象の鼻テラス内トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩1分</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="warning-box caution">
+                        ⚠️ 激しい混雑のため穴場ではない
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=象の鼻パーク" target="_blank" rel="noopener noreferrer" class="map-btn">
+                        <i class="bi bi-box-arrow-up-right fs-5"></i> Googleマップで開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 帆船日本丸（混雑注意バッジ付き） -->
+        <div class="card-custom">
+            <div class="card-inner">
+                <div class="card-header-custom">
+                    <span class="fs-4">📍</span>
+                    <div class="title-group">
+                        <h3>帆船日本丸</h3>
+                        <span class="area-tag">みなとみらい</span>
+                        <span class="status-badge caution">混雑注意</span>
+                    </div>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="map-iframe-wrapper">
+                        <iframe src="https://maps.google.com/maps?q=帆船日本丸&t=k&z=17&ie=UTF8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+
+                    <div class="spot-info-block">
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-shop text-warning fs-4"></i> コンビニ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・ファミリーマート 日本丸メモリアルパーク店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩1分</span>
+                                </li>
+                                <li>
+                                    ・セブンイレブン 桜木町駅前店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩3分</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-person-workspace text-info fs-4"></i> トイレ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・日本丸メモリアルパーク内公衆トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩1分</span>
+                                </li>
+                                <li>
+                                    ・コレットマーレ内トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩3分</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="warning-box caution">
+                        ⚠️ 激しい混雑のため穴場ではない
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=帆船日本丸" target="_blank" rel="noopener noreferrer" class="map-btn">
+                        <i class="bi bi-box-arrow-up-right fs-5"></i> Googleマップで開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 赤レンガ倉庫海側（無料入場不可バッジ付き） -->
+        <div class="card-custom">
+            <div class="card-inner">
+                <div class="card-header-custom">
+                    <span class="fs-4">📍</span>
+                    <div class="title-group">
+                        <h3>赤レンガ倉庫海側</h3>
+                        <span class="area-tag">新港</span>
+                        <span class="status-badge danger">無料入場不可</span>
+                    </div>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="map-iframe-wrapper">
+                        <iframe src="https://maps.google.com/maps?q=横浜赤レンガパーク&t=k&z=17&ie=UTF8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+
+                    <div class="spot-info-block">
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-shop text-warning fs-4"></i> コンビニ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・セブンイレブン 横浜ワールドポーターズ店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩4分</span>
+                                </li>
+                                <li>
+                                    ・ローソン 横浜ハンマーヘッド店
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩5分</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="spot-info-group">
+                            <span class="spot-info-title"><i class="bi bi-person-workspace text-info fs-4"></i> トイレ</span>
+                            <ul class="spot-info-list">
+                                <li>
+                                    ・赤レンガ倉庫1号館/2号館内トイレ
+                                    <span class="time-dist"><i class="bi bi-arrow-return-right"></i> 徒歩2分</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="warning-box danger">
+                        ⚠️ 有料席設定のため無料入場不可
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=横浜赤レンガパーク" target="_blank" rel="noopener noreferrer" class="map-btn">
+                        <i class="bi bi-box-arrow-up-right fs-5"></i> Googleマップで開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 参照リンク -->
+    <div class="ref-footer">
+        参照: <a href="https://www.mmsf.yokohama/" target="_blank" rel="noopener noreferrer">横浜グリーンエクスポ応援 みなとみらいフェスティバル 公式サイト</a>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.card-custom');
+
+            cards.forEach(card => {
+                const header = card.querySelector('.card-header-custom');
+                header.addEventListener('click', () => {
+                    card.classList.toggle('active');
+
+                    // カードの外周から光の砂を舞わせる
+                    createBoxBorderSparkles(card);
+                });
+            });
+
+            // Canvasによる「光の砂（Sparkle）」アニメーション
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor(x, y, angle) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = Math.random() * 3 + 1;
+                    const speed = Math.random() * 3 + 1;
+                    this.speedX = Math.cos(angle) * speed + (Math.random() - 0.5);
+                    this.speedY = Math.sin(angle) * speed + (Math.random() - 0.5);
+                    this.color = `hsl(${Math.floor(Math.random() * 60 + 170)}, 100%, 75%)`;
+                    this.alpha = 1;
+                    this.decay = Math.random() * 0.03 + 0.02;
+                }
+
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.speedY += 0.04;
+                    this.alpha -= this.decay;
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, this.alpha);
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function createBoxBorderSparkles(cardElement) {
+                const rect = cardElement.getBoundingClientRect();
+                const density = 8;
+
+                for (let i = 0; i < density; i++) {
+                    const x = rect.left + (rect.width / density) * i;
+                    particles.push(new Particle(x, rect.top, -Math.PI / 2));
+                }
+                for (let i = 0; i < density; i++) {
+                    const x = rect.left + (rect.width / density) * i;
+                    particles.push(new Particle(x, rect.bottom, Math.PI / 2));
+                }
+                for (let i = 0; i < density; i++) {
+                    const y = rect.top + (rect.height / density) * i;
+                    particles.push(new Particle(rect.left, y, Math.PI));
+                }
+                for (let i = 0; i < density; i++) {
+                    const y = rect.top + (rect.height / density) * i;
+                    particles.push(new Particle(rect.right, y, 0));
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    particles[i].draw();
+                    if (particles[i].alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        });
+    </script>
+</body>
+</html>
